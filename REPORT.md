@@ -77,4 +77,4 @@ Profiling revealed that ~95% of processing time is consumed by the `streaming_ge
 - **A10G**: TTFB ~1.1-1.3s, real-time factor ~0.7-0.75
 - **H100**: TTFB ~0.84s, real-time factor ~0.54
 
-This configuration delivered sub-1-second TTFB on H100 hardware while maintaining good performance on A10G systems. FEw other observation were, init_tts might be adding to the latency. 
+This configuration delivered sub-1-second TTFB on H100 hardware while maintaining good performance on A10G systems.
