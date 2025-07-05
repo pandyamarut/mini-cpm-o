@@ -5,13 +5,13 @@ import numpy as np
 import soundfile as sf
 
 
-HF_TOKEN = "<your-huggingface-token>"
+HF_TOKEN = "<add_hf_token_here>"  # Replace with your Hugging Face token
 
 
 MODEL_REVISION = "9da79acdd8906c7007242cbd09ed014d265d281a"
 
 
-app = modal.App(name="minicpm-inference-engine")
+app = modal.App(name="minicpm-inference-engine-v1-test")
 
 
 minicpm_inference_engine_image = (
@@ -38,6 +38,7 @@ minicpm_inference_engine_image = (
         "scipy==1.15.2",
         "numpy==1.26.4",
         "pandas==2.2.3",
+        "bitsandbytes"
     ).pip_install(
         "Pillow==10.1.0",
         "sentencepiece==0.2.0",
@@ -92,13 +93,14 @@ class MinicpmInferenceEngine:
 
 
     @modal.method()
-    def run(self, text: str):
+    async def run(self, text: str):
         audio_data = []
         start_time = time.perf_counter()
         time_to_first_byte = None
         total_time = None
 
-        for item in self.model.run_inference([text]):
+        async for item in self.model.run_inference([text]):
+            print(f"Received item: {type(item)}, value: {item}") 
             if item is None:
                 break
             if isinstance(item, str):
@@ -108,7 +110,8 @@ class MinicpmInferenceEngine:
 
                 if time_to_first_byte is None:
                     time_to_first_byte = time.perf_counter() - start_time
-                    
+                    print(f"adding first byte of audio data, TTFB: {time_to_first_byte:.2f}s")
+                
                 audio_data.append(item.array)
 
         total_time = time.perf_counter() - start_time
@@ -117,7 +120,7 @@ class MinicpmInferenceEngine:
             raise ValueError("No audio data received")
         
         full_audio = np.concatenate(audio_data)
-
+        print(f"TTFB: {time_to_first_byte:.2f}s, Total time: {total_time:.2f}s, Audio length: {len(full_audio) / 24000:.2f}s")
         return {
             "time_to_first_byte": time_to_first_byte,
             "total_time": total_time,
